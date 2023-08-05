@@ -80,10 +80,10 @@
   };
 });
     //odświeżanie wiadomości 
-    $('#messages').load('/messages'); //Preloads df
+    $('#messages').load('/messages?username='+Cookies.get("username")+'&passwordHash='+Cookies.get("passwordHash"));
         var timeout = setInterval(checkNeedToReload, 500);    
         function reloadDF () {
-            $('#messages').load('/messages');
+            $('#messages').load('/messages?username='+Cookies.get("username")+'&passwordHash='+Cookies.get("passwordHash"));
         };
         function checkNeedToReload(){
           $.post(

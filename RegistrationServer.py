@@ -3,6 +3,7 @@ import json
 import redis
 from cryptography.fernet import Fernet
 import io
+from urllib.parse import parse_qs
 
 redisClient = redis.Redis(host=redisHost,port=40434,db=0,decode_responses=True,username=redisUsername,password=redisPassword)
 app=Bottle()
@@ -13,9 +14,8 @@ def do_register():
     username = request.forms.get('username')
     password = request.forms.get('password')
     confirmPassword=request.forms.get('confirm_password')
-    czyIsnieje=redisClient.acl_getuser(username)
+    czyIsnieje=redisClient.get(username)
     if czyIsnieje==None and password==confirmPassword:
-        redisClient.acl_setuser(username=username, enabled=True, nopass=False, passwords="+"+password, hashed_passwords=None,  commands=["+get","+set"], categories=None, keys="*", channels="*", selectors=None, reset=False, reset_keys=False, reset_channels=False, reset_passwords=False)
         redisClient.set(name=username,value=Fernet(key).encrypt(password.encode()).decode())
         redirect('/login?fresh=True')
     elif czyIsnieje!=None:
@@ -84,13 +84,27 @@ def app_api():
         tpl = SimpleTemplate('{{message}}')
         message=tpl.render(message=message)
         file=open('views/messages.tpl','a')
-        file.write(f"{message}<br>\n")
+        file.write(f"{message}<br>")
         file.close()
         version+=1
 #odświeżanie wiadomości
 @app.route('/messages',"GET")
 def seeMessages():
-    return template('messages.tpl')
+    dict = parse_qs(request.query_string)
+    try: 
+        username=dict.get("username")[0]
+        passwordHash=dict.get("passwordHash")[0]
+    except:
+        return "Nie zalogowano / Sesja wygasła."
+    correctHash = redisClient.get(username)
+    print(correctHash==passwordHash)
+    if correctHash==passwordHash:
+        file= open("views/messages.tpl","r")
+        messages=file.read()
+        file.close()
+        return messages
+    else:
+        return "Nie zalogowano / Sesja wygasła."
 #sprawdzanie czy potrzeba odświeżać :)
 @app.route('/api/messages',"POST")
 def checkFreshMessages():
@@ -103,4 +117,4 @@ def checkFreshMessages():
     else:
         response.content_type = 'application/json'
         return {"LocalVersion":str(userVersion),"reload":"false"}
-run(app, host='localhost', port=8080, debug=True, reloader=True)
+run(app, host='localhost', port=8080,reloader=True)
