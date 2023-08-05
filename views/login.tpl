@@ -57,13 +57,15 @@
     margin-left: auto;
     margin-right: auto;
   }
+  .needEnter{
+    white-space: pre-line;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Logowanie</h2>
-  <span style="color: red">{{error}}</span>
-  <span style="color: green">{{positive}}</span>
+  <div class="needEnter"><span style="color: red">{{error}}</span><span style="color: green">{{positive}}</span></div>
   <form method="post">
     <div class="input-group">
       <label for="username">Nazwa użytkownika</label>
