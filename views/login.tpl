@@ -15,6 +15,10 @@
     align-items: center;
     min-height: 100vh;
   }
+  a{
+    color: white;
+    text-decoration:none;
+  }
   .container {
     background-color: #ffffff;
     padding: 20px;
@@ -77,6 +81,9 @@
     </div>
     <div class="input-group">
       <button type="submit">Zaloguj</button>
+    </div>
+    <div class="input-group">
+      <button><a href="/register">Zarejestruj</a></button>
     </div>
   </form>
 </div>
