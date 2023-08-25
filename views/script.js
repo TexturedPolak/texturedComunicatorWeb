@@ -1,6 +1,9 @@
 var username = Cookies.get('username');
 var passwordHash = Cookies.get('passwordHash');
 var input = document.getElementById("input");
+var messages = "";
+Cookies.set("id",0);
+var havedId=-1
 //czekanie aż w inpucie pojawi się enter
 input.addEventListener("keypress", function(event) {
     if (event.key === "Enter") {
@@ -8,7 +11,7 @@ input.addEventListener("keypress", function(event) {
         //wysylanie danych do pythona
         $.ajax({
             url: "/api",
-            type: "POST",
+            type: "PUT",
             data: JSON.stringify({"username": username,"passwordHash":passwordHash,"message":document.querySelector('input').value}),
             contentType: "application/json",
             dataType: "json"
@@ -19,21 +22,33 @@ input.addEventListener("keypress", function(event) {
     };
 });
 //odświeżanie wiadomości 
-$('#messages').load('/messages?username='+Cookies.get("username")+'&passwordHash='+Cookies.get("passwordHash"));
-var timeout = setInterval(checkNeedToReload, 500);    
+reloadDF();
+var timeout = setInterval(checkNeedToReload, 1000);    
 function reloadDF () {
-    $('#messages').load('/messages?username='+Cookies.get("username")+'&passwordHash='+Cookies.get("passwordHash"));
-    var element = document.getElementById("scrool");
-    setTimeout(function(){
-        element.scrollTop = element.scrollHeight;
-    },300)
-};
+    $.ajax({
+        url: "/api",
+        type: "PATCH",
+        data: JSON.stringify({"username": username,"passwordHash":passwordHash,"lastId":Cookies.get('id')}),
+        contentType: "application/json",
+        dataType: "json",
+        complete: function(data) {
+            var json = data.responseJSON;
+            messages+=json.messages;
+            $('#messages').html(messages);
+            var element = document.getElementById("scrool");
+            setTimeout(function(){
+                element.scrollTop = element.scrollHeight;
+                },300)
+        }
+        });
+    
+    };
 function checkNeedToReload(){
     $.post(
-        "/api/messages",
-        {"LocalVersion": Cookies.get('LocalVersion')},function(data) {
+        "/api",
+        {"id": Cookies.get('id')},function(data) {
             Cookies.set("reload",data.reload);
-            Cookies.set("LocalVersion",data.LocalVersion);
+            Cookies.set("id",data.id);
             if (data.reload=="true"){
                 data.reload=false;
                 Cookies.set("reload","false");

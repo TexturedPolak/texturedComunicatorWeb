@@ -8,6 +8,10 @@ import sqlite3
 
 redisClient = redis.Redis(host=redisHost,port=40434,db=0,decode_responses=True,username=redisUsername,password=redisPassword)
 app=Bottle()
+conn = sqlite3.connect('baza.sqlite')
+c = conn.cursor()
+for row in c.execute("""SELECT id FROM messages ORDER BY id DESC LIMIT 1"""):
+    version=row[0]
 #Backend rejestracji
 @app.route('/register', method='POST')
 def do_register():
@@ -39,12 +43,14 @@ def do_login():
     if goodPassword!=None:
         goodPassword=Fernet(key).decrypt(redisClient.get(username).encode()).decode()
     if goodPassword==password:
+        goodPassword=""
         response.set_cookie("username",username)
         response.set_cookie("passwordHash",passwordHash)
-        response.set_cookie("LocalVersion",str(version))
+        response.set_cookie("id",str(version))
         response.set_cookie("reload",'true')
         redirect('/app')
     elif goodPassword!=password or goodPassword==None:
+        goodPassword=""
         error={"error":"Niepoprawny login lub hasło!","positive":""}
         return template('login.tpl',error)
 #fronted logowania
@@ -71,7 +77,7 @@ def app_site():
         redirect("/login")
     return template('app.tpl')
 #wysyłanie wiadomości :)
-@app.route('/api',"POST")
+@app.route('/api',"PUT")
 def app_api():
     global version
     post = request.json
@@ -80,43 +86,45 @@ def app_api():
     message = post.get("message")
     correctHash=redisClient.get(username)
     if passwordHash==correctHash:
-        message=f"<{username}> {message}"
         tpl = SimpleTemplate('{{message}}')
+        userTpl = SimpleTemplate('{{username}}')
         message=tpl.render(message=message)
-        file=open('views/messages.tpl','a')
-        file.write(f"{message}<br>")
-        file.close()
+        username=userTpl.render(username=username)
+        c.execute(f"""INSERT INTO messages VALUES (Null,'{username}','{message}')""")
+        conn.commit()
         version+=1
 #odświeżanie wiadomości
-@app.route('/messages',"GET")
+@app.route('/api',"PATCH")
 def seeMessages():
-    dict = parse_qs(request.query_string)
-    try: 
-        username=dict.get("username")[0]
-        passwordHash=dict.get("passwordHash")[0]
+    try:
+        username=request.json.get("username")
+        passwordHash=request.json.get("passwordHash")
+        lastId=int(request.json.get("lastId"))
     except:
-        return "Nie zalogowano / Sesja wygasła."
+        response.content_type = 'application/json'
+        return {"messages":"Nie zalogowano / Sesja wygasła."}
     correctHash = redisClient.get(username)
-    print(correctHash==passwordHash)
     if correctHash==passwordHash:
-        file= open("views/messages.tpl","r")
-        messages=file.read()
-        file.close()
-        return messages
+        messages=""
+        for messageBox in c.execute(f"""SELECT nickname,message FROM messages WHERE id>={lastId} ORDER BY id"""):
+            messages+="""<span style="color: #79b6c9;">&lt;"""+messageBox[0]+"&gt;</span> "+messageBox[1]+"<br>"
+        response.content_type = 'application/json'
+        return {"messages":messages}
     else:
-        return "Nie zalogowano / Sesja wygasła."
+        response.content_type = 'application/json'
+        return {"messages":"Nie zalogowano / Sesja wygasła."}
 #sprawdzanie czy potrzeba odświeżać :)
-@app.route('/api/messages',"POST")
+@app.route('/api',"POST")
 def checkFreshMessages():
-    global version
     post = request.forms
-    userVersion=int(post.get("LocalVersion"))
+    userVersion=int(post.get("id"))
     if userVersion!=version:
         response.content_type = 'application/json'
-        return {"LocalVersion":str(version),"reload":"true"}
+        print(version)
+        return {"id":str(version),"reload":"true"}
     else:
         response.content_type = 'application/json'
-        return {"LocalVersion":str(userVersion),"reload":"false"}
+        return {"id":str(userVersion),"reload":"false"}
 @app.route('/',"GET")
 def routeToApp():
     redirect('/app')
