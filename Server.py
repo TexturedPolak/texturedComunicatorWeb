@@ -5,7 +5,11 @@ from cryptography.fernet import Fernet
 import io
 from urllib.parse import parse_qs
 import sqlite3
-
+key=""
+cookiesKey=""
+redisHost=""
+redisUsername=""
+redisPassword=""
 redisClient = redis.Redis(host=redisHost,port=40434,db=0,decode_responses=True,username=redisUsername,password=redisPassword)
 app=Bottle()
 conn = sqlite3.connect('baza.sqlite')
@@ -102,17 +106,17 @@ def seeMessages():
         lastId=int(request.json.get("lastId"))
     except:
         response.content_type = 'application/json'
-        return {"messages":"Nie zalogowano / Sesja wygasła."}
+        return {"messages":"Nie zalogowano / Sesja wygasła.","id":version}
     correctHash = redisClient.get(username)
     if correctHash==passwordHash:
         messages=""
-        for messageBox in c.execute(f"""SELECT nickname,message FROM messages WHERE id>={lastId} ORDER BY id"""):
+        for messageBox in c.execute(f"""SELECT nickname,message FROM messages WHERE id>{lastId} ORDER BY id"""):
             messages+="""<span style="color: #79b6c9;">&lt;"""+messageBox[0]+"&gt;</span> "+messageBox[1]+"<br>"
         response.content_type = 'application/json'
-        return {"messages":messages}
+        return {"messages":messages,"id":version}
     else:
         response.content_type = 'application/json'
-        return {"messages":"Nie zalogowano / Sesja wygasła."}
+        return {"messages":"Nie zalogowano / Sesja wygasła.","id":version}
 #sprawdzanie czy potrzeba odświeżać :)
 @app.route('/api',"POST")
 def checkFreshMessages():
@@ -120,11 +124,10 @@ def checkFreshMessages():
     userVersion=int(post.get("id"))
     if userVersion!=version:
         response.content_type = 'application/json'
-        print(version)
-        return {"id":str(version),"reload":"true"}
+        return {"reload":"true"}
     else:
         response.content_type = 'application/json'
-        return {"id":str(userVersion),"reload":"false"}
+        return {"reload":"false"}
 @app.route('/',"GET")
 def routeToApp():
     redirect('/app')

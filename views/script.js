@@ -4,6 +4,7 @@ var input = document.getElementById("input");
 var messages = "";
 Cookies.set("id",0);
 var havedId=-1
+var endedRequest = true
 //czekanie aż w inpucie pojawi się enter
 input.addEventListener("keypress", function(event) {
     if (event.key === "Enter") {
@@ -22,8 +23,7 @@ input.addEventListener("keypress", function(event) {
     };
 });
 //odświeżanie wiadomości 
-reloadDF();
-var timeout = setInterval(checkNeedToReload, 1000);    
+var timeout = setInterval(checkNeedToReload, 333);    
 function reloadDF () {
     $.ajax({
         url: "/api",
@@ -35,27 +35,37 @@ function reloadDF () {
             var json = data.responseJSON;
             messages+=json.messages;
             $('#messages').html(messages);
+            Cookies.set("id",json.id);
             var element = document.getElementById("scrool");
             setTimeout(function(){
                 element.scrollTop = element.scrollHeight;
-                },300)
+                },300);
+            endedRequest=true;
         }
         });
     
     };
 function checkNeedToReload(){
-    $.post(
-        "/api",
-        {"id": Cookies.get('id')},function(data) {
-            Cookies.set("reload",data.reload);
-            Cookies.set("id",data.id);
-            if (data.reload=="true"){
-                data.reload=false;
-                Cookies.set("reload","false");
-                reloadDF();
-            }
+    if (endedRequest==true){
+        endedRequest=false;
+        $.post(
+            "/api",
+            {"id": Cookies.get('id')},function(data) {
+              Cookies.set("reload",data.reload);
+                if (data.reload=="true"){
+                    data.reload=false;
+                    Cookies.set("reload","false");
+                    reloadDF();
+                    
+                }
+                else{
+                    endedRequest=true;
+                }
+    
         }
-    );
+        );
+        endedRequest=true;
+    }
 };
       //post > server > None albo nowy zestaw
       //post > server > baza danych > uzupelnianie zmiennej js > wyświetlanie
