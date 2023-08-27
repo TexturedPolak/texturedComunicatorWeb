@@ -12,15 +12,15 @@ For all requests is one URL:
 ### Check new messages
 METHOD: **POST**<br>
 Content Type: **application/x-www-form-urlencoded**<br>
-Payload: {**id:** your_last_message_id (int)}<br>
-Response: **reload: true/false**
+Payload: ```{id: your_last_message_id (int)}```<br>
+Response: ```{reload: true/false}```
 ### Get new messages (not use for checking new messages, pls)
 METHOD: **PATCH**<br>
 Content Type: **application/json**<br>
-Payload: {**lastId:** your_last_message_id (int or str) , **passwordHash**: your_password_hash (str) , **username**: your_username (str)} <br>
-Response: {**id**: latest_message_id (int) , **messages**: all_new_messages (str)}
+Payload: ```{lastId: your_last_message_id(int or str), passwordHash: your_password_hash(str), username: your_username(str)}``` <br>
+Response: ```{id: latest_message_id(int), messages: all_new_messages(str)}```
 ### Send message
 METHOD: **PUT**<br>
 Content Type: **application/json**<br>
-Payload: {**message:** message_to_send (str) , **passwordHash**: your_password_hash (str) , **username**: your_username (str)} <br>
+Payload: ```{message: message_to_send(str), passwordHash: your_password_hash (str), username: your_username (str)}``` <br>
 Response: No Response, only Status Code
