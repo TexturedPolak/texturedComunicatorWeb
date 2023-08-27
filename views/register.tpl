@@ -61,7 +61,8 @@
 </head>
 <body>
 <div class="container">
-  <h2>Rejestracja</h2>
+  <h2>Rejestracja</h2><br>
+  Rejestrując się zdajesz sobie sprawę i akceptujesz wykorzystywanie plików cookies na tej witrynie.<br>
   <span style="color: red">{{error}}</span>
   <form method="post">
     <div class="input-group">

@@ -5,6 +5,8 @@ var messages = "";
 Cookies.set("id",0);
 var havedId=-1
 var endedRequest = true
+var timeToOffline = 10.0
+var tries = 0
 //czekanie aż w inpucie pojawi się enter
 input.addEventListener("keypress", function(event) {
     if (event.key === "Enter") {
@@ -23,7 +25,20 @@ input.addEventListener("keypress", function(event) {
     };
 });
 //odświeżanie wiadomości 
-var timeout = setInterval(checkNeedToReload, 333);    
+var timeout = setInterval(checkNeedToReload, 100);
+var timeoutOffline = setInterval(checkIsOnline, 100);
+function checkIsOnline () {
+    timeToOffline-=0.1;
+    if (timeToOffline<=0){
+        tries+=1
+        if (tries>=3){
+            $('#messages').html("Jesteś offline :( <br> Zrestartuj stronę!");
+        }
+        else{
+            endedRequest==true;
+        }
+    }
+};    
 function reloadDF () {
     $.ajax({
         url: "/api",
@@ -41,6 +56,8 @@ function reloadDF () {
                 element.scrollTop = element.scrollHeight;
                 },300);
             endedRequest=true;
+            timeToOffline=10.0;
+            tries=0;
         }
         });
     
@@ -60,11 +77,12 @@ function checkNeedToReload(){
                 }
                 else{
                     endedRequest=true;
+                    timeToOffline=10.0;
+                    tries=0;
                 }
     
         }
         );
-        endedRequest=true;
     }
 };
       //post > server > None albo nowy zestaw

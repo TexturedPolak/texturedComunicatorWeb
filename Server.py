@@ -1,4 +1,5 @@
-from bottle import request, run, Bottle, response, template, SimpleTemplate, redirect
+from bottle import request,ServerAdapter, run, Bottle, response, template, SimpleTemplate, redirect
+import bottle
 import json
 import redis
 from cryptography.fernet import Fernet
@@ -11,6 +12,16 @@ redisHost=""
 redisUsername=""
 redisPassword=""
 redisClient = redis.Redis(host=redisHost,port=40434,db=0,decode_responses=True,username=redisUsername,password=redisPassword)
+#for reverse proxy
+#def fix_environ_middleware(app):
+#  def fixed_app(environ, start_response):
+#    environ['wsgi.url_scheme'] = 'https'
+#    environ['HTTP_X_FORWARDED_HOST'] = 'chat.texturedpolak.xyz'
+#    return app(environ, start_response)
+#  return fixed_app
+#app = bottle.default_app()
+#app.wsgi = fix_environ_middleware(app.wsgi)
+#for none reverse proxy
 app=Bottle()
 conn = sqlite3.connect('baza.sqlite')
 c = conn.cursor()
@@ -137,4 +148,4 @@ def giveScript():
     content=file.read()
     file.close()
     return content
-run(app, host='localhost', port=8080,reloader=True)
+run(app, host='localhost', port=8080)
