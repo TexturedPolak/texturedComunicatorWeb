@@ -1,4 +1,8 @@
 # TexturedComunicator
+![GitHub](https://img.shields.io/github/license/TexturedPolak/texturedComunicatorWeb)
+![GitHub Repo stars](https://img.shields.io/github/stars/TexturedPolak/texturedComunicatorWeb)
+![GitHub issues](https://img.shields.io/github/issues/TexturedPolak/texturedComunicatorWeb)
+
 ## About
 That's simple (very simple) comunicator to send text messages. It's writen in python and using Bottle library.<br> TexturedComunicator have hosted instance on <a href="https://chat.texturedpolak.xyz">https://chat.texturedpolak.xyz</a> .
 ## Hosted instance details
