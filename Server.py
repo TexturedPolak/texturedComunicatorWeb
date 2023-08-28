@@ -8,7 +8,6 @@ from cryptography.fernet import Fernet
 
 # some variables
 key = ""
-cookiesKey = ""
 redisHost = ""
 redisUsername = ""
 redisPassword = ""
@@ -38,7 +37,7 @@ for row in c.execute("""SELECT id FROM messages ORDER BY id DESC LIMIT 1"""):
     version = row[0]
 
 
-# Register backend 
+# Register backend
 @app.route('/register', method='POST')
 def do_register():
     username = request.forms.get('username')
@@ -57,14 +56,14 @@ def do_register():
         return template('register.tpl', error)
 
 
-# Register Frontend 
+# Register Frontend
 @app.route('/register', method='GET')
 def do_register_site():
     error = {"error": ""}
     return template('register.tpl', error)
 
 
-# Login backend 
+# Login backend
 @app.route('/login', method='POST')
 def do_login():
     username = request.forms.get('username')
@@ -72,8 +71,8 @@ def do_login():
     goodPassword = redisClient.get(username)
     passwordHash = goodPassword
     if goodPassword is not None:
-        goodPassword = Fernet(key).decrypt(redisClient.get(username).\
-                                           encode()).decode()
+        goodPassword = Fernet(key).decrypt(redisClient.get(username)
+                                           .encode()).decode()
     if goodPassword == password:
         goodPassword = ""
         response.set_cookie("username", username)
