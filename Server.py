@@ -39,7 +39,7 @@ for row in c.execute("""SELECT id FROM messages ORDER BY id DESC LIMIT 1"""):
 
 # Register backend
 @app.route('/register', method='POST')
-def do_register():
+def doRegister():
     username = request.forms.get('username')
     password = request.forms.get('password')
     confirmPassword = request.forms.get('confirm_password')
@@ -58,14 +58,14 @@ def do_register():
 
 # Register Frontend
 @app.route('/register', method='GET')
-def do_register_site():
+def doRegisterSite():
     error = {"error": ""}
     return template('register.tpl', error)
 
 
 # Login backend
 @app.route('/login', method='POST')
-def do_login():
+def doLogin():
     username = request.forms.get('username')
     password = request.forms.get('password')
     goodPassword = redisClient.get(username)
@@ -88,7 +88,7 @@ def do_login():
 
 # Login frontend
 @app.route('/login', method='GET')
-def do_login_site():
+def doLoginSite():
     try:
         fresh = request.query["fresh"]
     except KeyError:
@@ -104,7 +104,7 @@ def do_login_site():
 
 
 @app.route('/app', method='GET')
-def app_site():
+def appSite():
     username = request.get_cookie("username")
     passwordHash = request.get_cookie("passwordHash")
     if username is None or passwordHash is None:
@@ -117,7 +117,7 @@ def app_site():
 
 # Send messages :)
 @app.route('/api', "PUT")
-def app_api():
+def appApi():
     global version
     post = request.json
     username = post.get("username")
@@ -130,7 +130,7 @@ def app_api():
         message = tpl.render(message=message)
         username = userTpl.render(username=username)
         c.execute(f"INSERT INTO messages VALUES \
-                  (Null,'{username}','{message}')")
+                  (Null, ?, ?)", (username, message))
         conn.commit()
         version += 1
 
@@ -150,7 +150,8 @@ def seeMessages():
     if correctHash == passwordHash:
         messages = ""
         for messageBox in c.execute(f"SELECT nickname,message FROM \
-                                    messages WHERE id>{lastId} ORDER BY id"):
+                                    messages WHERE id>? ORDER BY id",
+                                    (lastId,)):
             messages += """<span style="color: #79b6c9;">&lt;"""\
                      + messageBox[0]\
                      + "&gt;</span>" + messageBox[1]+"<br>"
