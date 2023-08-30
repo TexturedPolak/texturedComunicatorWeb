@@ -26,7 +26,7 @@ Response:
 * if ```html: true```:<br>
 ```{lastId: latest_message_id(int), messages: all_new_messages_in_html_secure_format(str)}```<br>
 * if ```html: false```:<br>
-```{lastId: latest_messages_id(int), messages: [{username: username str), message: one_message(str), id: one_message_id(int)}]}```
+```{lastId: latest_messages_id(int), messages: [{username: username str), message: one_message(str), id: one_message_id(int)},...]}```
 ### Send message
 METHOD: **PUT**<br>
 Content Type: **application/json**<br>
