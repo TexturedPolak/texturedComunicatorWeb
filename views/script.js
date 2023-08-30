@@ -43,14 +43,14 @@ function reloadDF () {
     $.ajax({
         url: "/api",
         type: "PATCH",
-        data: JSON.stringify({"username": username,"passwordHash":passwordHash,"lastId":Cookies.get('id')}),
+        data: JSON.stringify({"username": username,"passwordHash":passwordHash,"lastId":Cookies.get('id'),"html":true}),
         contentType: "application/json",
         dataType: "json",
         complete: function(data) {
             var json = data.responseJSON;
             messages+=json.messages;
             $('#messages').html(messages);
-            Cookies.set("id",json.id);
+            Cookies.set("id",json.lastId);
             var element = document.getElementById("scrool");
             setTimeout(function(){
                 element.scrollTop = element.scrollHeight;

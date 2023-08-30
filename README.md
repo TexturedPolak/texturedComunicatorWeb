@@ -21,8 +21,12 @@ Response: ```{reload: true/false}```
 ### Get new messages (not use for checking new messages, pls)
 METHOD: **PATCH**<br>
 Content Type: **application/json**<br>
-Payload: ```{lastId: your_last_message_id(int or str), passwordHash: your_password_hash(str), username: your_username(str)}``` <br>
-Response: ```{id: latest_message_id(int), messages: all_new_messages(str)}```
+Payload: ```{lastId: your_last_message_id(int or str), passwordHash: your_password_hash(str), username: your_username(str), html: true/false (bool)}``` <br>
+Response:
+* if ```html: true```:<br>
+```{lastId: latest_message_id(int), messages: all_new_messages_in_html_secure_format(str)}```<br>
+* if ```html: false```:<br>
+```{lastId: latest_messages_id(int), messages: [{username: username str), message: one_message(str), id: one_message_id(int)}]}```
 ### Send message
 METHOD: **PUT**<br>
 Content Type: **application/json**<br>

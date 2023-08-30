@@ -1,6 +1,7 @@
 import bottle
 import redis
 import sqlite3
+import json
 from bottle import request, run, Bottle, response, template
 from bottle import SimpleTemplate, redirect
 from cryptography.fernet import Fernet
@@ -19,11 +20,11 @@ redisClient = redis.Redis(host=redisHost, port=40434, db=0,
                           password=redisPassword)
 # For reverse proxy
 # def fix_environ_middleware(app):
-#  def fixed_app(environ, start_response):
-#    environ['wsgi.url_scheme'] = 'https'
-#    environ['HTTP_X_FORWARDED_HOST'] = 'chat.texturedpolak.xyz'
-#    return app(environ, start_response)
-#  return fixed_app
+#     def fixed_app(environ, start_response):
+#         environ['wsgi.url_scheme'] = 'https'
+#         environ['HTTP_X_FORWARDED_HOST'] = 'chat.texturedpolak.xyz'
+#         return app(environ, start_response)
+#     return fixed_app
 # app = bottle.default_app()
 # app.wsgi = fix_environ_middleware(app.wsgi)
 # for none reverse proxy
@@ -125,10 +126,6 @@ def appApi():
     message = post.get("message")
     correctHash = redisClient.get(username)
     if passwordHash == correctHash:
-        tpl = SimpleTemplate('{{message}}')
-        userTpl = SimpleTemplate('{{username}}')
-        message = tpl.render(message=message)
-        username = userTpl.render(username=username)
         c.execute(f"INSERT INTO messages VALUES \
                   (Null, ?, ?)", (username, message))
         conn.commit()
@@ -142,26 +139,48 @@ def seeMessages():
         username = request.json.get("username")
         passwordHash = request.json.get("passwordHash")
         lastId = int(request.json.get("lastId"))
+        html = request.json.get("html")
     except KeyError:
         response.content_type = 'application/json'
         return {"messages": "Nie zalogowano / Sesja wygasła.",
-                "id": version}
+                "lastId": version}
     correctHash = redisClient.get(username)
     if correctHash == passwordHash:
-        messages = ""
-        for messageBox in c.execute(f"SELECT nickname,message FROM \
-                                    messages WHERE id>? ORDER BY id",
-                                    (lastId,)):
-            messages += """<span style="color: #79b6c9;">&lt;"""\
-                     + messageBox[0]\
-                     + "&gt;</span>" + messageBox[1]+"<br>"
-        response.content_type = 'application/json'
-        return {"messages": messages,
-                "id": version}
+        if html:
+            messages = ""
+            for messageBox in c.execute(f"SELECT nickname,message FROM \
+                                        messages WHERE id>? ORDER BY id",
+                                        (lastId,)):
+                tpl = SimpleTemplate('{{message}}')
+                userTpl = SimpleTemplate('{{username}}')
+                message = tpl.render(message=messageBox[1])
+                username = userTpl.render(username=messageBox[0])
+                messages += """<span style="color: #79b6c9;">&lt;"""\
+                         + username\
+                         + "&gt;</span> "\
+                         + message\
+                         + "<br>\n"
+            response.content_type = 'application/json'
+            return {"messages": messages,
+                    "lastId": version}
+        if html is False:
+            messages = []
+            for messageBox in c.execute(f"SELECT nickname,message,id FROM \
+                                        messages WHERE id>? ORDER BY id",
+                                        (lastId,)):
+                message = messageBox[1]
+                username = messageBox[0]
+                id = messageBox[2]
+                messages.append({"username": username,
+                                 "message": message,
+                                 "id": id})
+            response.content_type = 'application/json'
+            return {"messages": messages,
+                    "lastId": version}
     else:
         response.content_type = 'application/json'
         return {"messages": "Nie zalogowano / Sesja wygasła.",
-                "id": version}
+                "lastId": version}
 
 
 # Check if need to reload messages
